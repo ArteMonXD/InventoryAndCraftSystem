@@ -32,7 +32,7 @@ public abstract class SlotAbstract : MonoBehaviour, IPointerEnterHandler, IPoint
 
     protected abstract void OnDragBegin(DragAndDropMessage message);
 
-    protected abstract void OnDragEnd(DragAndDropMessage message);
+    protected abstract void OnDragEnd(DragAndDropMessage message, bool success);
     
     protected virtual void OnDestroy()
     {

@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class TooltipSystem : MonoBehaviour
 {
@@ -9,17 +10,7 @@ public class TooltipSystem : MonoBehaviour
     [SerializeField] private TextMeshProUGUI itemStatsText;
 
     private RectTransform tooltipRect;
-    private Vector2 offset = new Vector2(15, -15);
-    private float showDelay = 0.5f;
-    private float hideDelay = 0.3f;
-
-    private float currentShowTimer;
-    private float currentHideTimer;
-    [SerializeField] private bool isWaitingToShow = false;
-    [SerializeField] private bool isWaitingToHide = false;
-
-    private ItemStack currentItemStack;
-    private Vector2 lastMousePosition;
+    private Vector2 offset = new Vector2(10, -10);
 
     public static TooltipSystem Instance { get; private set; }
 
@@ -31,129 +22,67 @@ public class TooltipSystem : MonoBehaviour
             return;
         }
 
+        var textGraphic = itemNameText.GetComponent<Graphic>();
+        if (textGraphic != null)
+            textGraphic.raycastTarget = false;
+
+        textGraphic = itemDescriptionText.GetComponent<Graphic>();
+        if (textGraphic != null)
+            textGraphic.raycastTarget = false;
+
+        textGraphic = itemStatsText.GetComponent<Graphic>();
+        if (textGraphic != null)
+            textGraphic.raycastTarget = false;
+
         Instance = this;
         tooltipRect = tooltipPanel.GetComponent<RectTransform>();
-        tooltipPanel.SetActive(false);
+        HideTooltip();
 
         Debug.Log("TooltipSystem initialized");
     }
 
-    public void RequestShowTooltip(ItemStack itemStack, Vector2 screenPosition)
+    public void ShowTooltip(ItemData itemData, Vector2 screenPosition)
     {
-        if (itemStack == null)
-        {
-            RequestHideTooltip();
-            return;
-        }
+        if (itemData == null) return;
 
-        // Если уже показываем этот же предмет - просто обновляем позицию
-        if (tooltipPanel.activeInHierarchy && currentItemStack == itemStack)
-        {
-            lastMousePosition = screenPosition;
-            return;
-        }
+        // Устанавливаем текст
+        itemNameText.text = itemData.itemName;
+        itemDescriptionText.text = itemData.description;
 
-        // Отменяем скрытие если оно было запланировано
-        if (isWaitingToHide)
-        {
-            isWaitingToHide = false;
-            currentHideTimer = 0f;
-        }
-
-        currentItemStack = itemStack;
-        lastMousePosition = screenPosition;
-        isWaitingToShow = true;
-        currentShowTimer = showDelay;
-
-        // Устанавливаем данные сразу
-        itemNameText.text = itemStack.ItemData.itemName;
-        itemDescriptionText.text = itemStack.ItemData.description;
-
+        // Добавляем статистику
         string stats = "";
-        if (itemStack.ItemData.IsStackable)
+        if (itemData.IsStackable)
         {
-            stats += $"Max Stack: {itemStack.ItemData.maxStackSize}\n";
-            stats += $"Quantity: {itemStack.Quantity}/{itemStack.MaxStackSize}";
+            stats += $"Max Stack: {itemData.maxStackSize}\n";
         }
         else
         {
-            stats += "Not Stackable";
+            stats += "Not Stackable\n";
         }
 
         itemStatsText.text = stats;
-    }
 
-    public void RequestHideTooltip()
-    {
-        if (!tooltipPanel.activeInHierarchy && !isWaitingToShow)
-            return;
-
-        isWaitingToShow = false;
-        currentShowTimer = 0f;
-
-        isWaitingToHide = true;
-        currentHideTimer = hideDelay;
-    }
-
-    public void ForceHideTooltip()
-    {
-        isWaitingToShow = false;
-        isWaitingToHide = false;
-        tooltipPanel.SetActive(false);
-        currentItemStack = null;
-    }
-
-    private void Update()
-    {
-        // Обработка показа
-        if (isWaitingToShow)
-        {
-            currentShowTimer -= Time.deltaTime;
-            if (currentShowTimer <= 0)
-            {
-                ShowTooltip();
-            }
-        }
-
-        // Обработка скрытия
-        if (isWaitingToHide)
-        {
-            currentHideTimer -= Time.deltaTime;
-            if (currentHideTimer <= 0)
-            {
-                HideTooltip();
-            }
-        }
-
-        // Обновление позиции если тултип активен
-        if (tooltipPanel.activeInHierarchy)
-        {
-            PositionTooltip(Input.mousePosition);
-        }
-    }
-
-    private void ShowTooltip()
-    {
-        if (currentItemStack == null)
-        {
-            ForceHideTooltip();
-            return;
-        }
-
+        // Позиционируем тултип
         tooltipPanel.SetActive(true);
-        PositionTooltip(lastMousePosition);
-        isWaitingToShow = false;
-
-        Debug.Log($"Tooltip shown: {currentItemStack.ItemData.itemName}");
+        PositionTooltip(screenPosition);
     }
 
-    private void HideTooltip()
+    public void ShowTooltipForItemStack(ItemStack itemStack, Vector2 screenPosition)
+    {
+        if (itemStack == null) return;
+
+        ShowTooltip(itemStack.ItemData, screenPosition);
+
+        // Добавляем информацию о количестве
+        if (itemStack.IsStackable)
+        {
+            itemStatsText.text += $"Quantity: {itemStack.Quantity}/{itemStack.MaxStackSize}";
+        }
+    }
+
+    public void HideTooltip()
     {
         tooltipPanel.SetActive(false);
-        isWaitingToHide = false;
-        currentItemStack = null;
-
-        Debug.Log("Tooltip hidden");
     }
 
     private void PositionTooltip(Vector2 screenPosition)
@@ -171,5 +100,14 @@ public class TooltipSystem : MonoBehaviour
             position.y = screenPosition.y + tooltipSize.y + Mathf.Abs(offset.y);
 
         tooltipRect.position = position;
+    }
+
+    private void Update()
+    {
+        if (tooltipPanel.activeInHierarchy)
+        {
+            // Следим за позицией мыши когда тултип активен
+            PositionTooltip(Input.mousePosition);
+        }
     }
 }

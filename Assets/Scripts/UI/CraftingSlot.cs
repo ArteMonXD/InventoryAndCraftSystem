@@ -7,7 +7,7 @@ public class CraftingSlot : SlotAbstract
 {
     protected CraftingSystem craftingSystem;
 
-    protected int gridIndex;
+    [SerializeField] protected int gridIndex;
     public int GridIndex => gridIndex;
 
     public virtual void Initialize(int index)
@@ -28,15 +28,18 @@ public class CraftingSlot : SlotAbstract
 
     public override void OnPointerEnter(PointerEventData eventData)
     {
+        Debug.Log($"Slot UI Pointer Enter");
+        var item = craftingSystem.GetItem(gridIndex);
         if (craftingSystem.GetSlotStatus(gridIndex))
         {
-            //TooltipSystem.Instance.RequestShowTooltip(slot.ItemStack, eventData.position);
+            TooltipSystem.Instance.ShowTooltipForItemStack(item, eventData.position);
         }
     }
 
     public override void OnPointerExit(PointerEventData eventData)
     {
-        //TooltipSystem.Instance.RequestHideTooltip();
+        Debug.Log($"Slot UI Pointer Exit");
+        TooltipSystem.Instance.HideTooltip();
     }
 
     protected override void StartDrag()
@@ -73,7 +76,7 @@ public class CraftingSlot : SlotAbstract
         }
     }
 
-    protected override void OnDragEnd(DragAndDropMessage message)
+    protected override void OnDragEnd(DragAndDropMessage message, bool success)
     {
         if (message.TryGetFrom(out CraftingSlotIdentifier craftFromSlot) && craftFromSlot.Slot == gridIndex)
         {

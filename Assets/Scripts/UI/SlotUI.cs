@@ -72,16 +72,18 @@ public class SlotUI : SlotAbstract, IPointerClickHandler
 
     public override void OnPointerEnter(PointerEventData eventData)
     {
+        Debug.Log($"Slot UI Pointer Enter");
         var slot = inventory.GetSlot(gridPosition);
         if (!slot.IsEmpty)
         {
-            //TooltipSystem.Instance.RequestShowTooltip(slot.ItemStack, eventData.position);
+            TooltipSystem.Instance.ShowTooltipForItemStack(slot.ItemStack, eventData.position);
         }
     }
 
     public override void OnPointerExit(PointerEventData eventData)
     {
-        //TooltipSystem.Instance.RequestHideTooltip();
+        Debug.Log($"Slot UI Pointer Exit");
+        TooltipSystem.Instance.HideTooltip();
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -138,19 +140,13 @@ public class SlotUI : SlotAbstract, IPointerClickHandler
         }
     }
 
-    protected override void OnDragEnd(DragAndDropMessage message)
+    protected override void OnDragEnd(DragAndDropMessage message, bool success)
     {
         // Восстанавливаем визуал
         if (message.TryGetFrom(out InventorySlotIdentifier inventorySlotIdentifier) && inventorySlotIdentifier.Slot == gridPosition)
         {
             itemIcon.color = Color.white;
         }          
-
-        // Если drop произошел на этот слот - обрабатываем
-        //if (toPosition == gridPosition && fromPosition != gridPosition)
-        //{
-        //    inventory.TryMoveItem(fromPosition, toPosition);
-        //}
     }
 
     public override void OnPointerDown(PointerEventData eventData)

@@ -75,9 +75,12 @@ public class ResultCraftSlot : CraftingSlot
         }
     }
 
-    protected override void OnDragEnd(DragAndDropMessage message)
+    protected override void OnDragEnd(DragAndDropMessage message, bool success)
     {
-        base.OnDragEnd(message);
+        base.OnDragEnd(message, success);
+
+        if (!success) return;
+
         if (!message.TryGetTo(out CraftingSlotIdentifier craftToSlot) || craftToSlot.Slot != gridIndex)
         {
             SwitchStatus(false);

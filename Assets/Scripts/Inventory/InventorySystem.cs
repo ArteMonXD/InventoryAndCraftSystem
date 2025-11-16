@@ -10,7 +10,7 @@ public class InventorySystem : MonoBehaviour
     public int Width => width;
     public int Height => height;
 
-    [SerializeField] private InventorySlot[,] slots;
+    private InventorySlot[,] slots;
     private bool isInitialized = false;
 
     public event System.Action<Vector2Int, ItemStack> OnItemAdded;
@@ -36,10 +36,13 @@ public class InventorySystem : MonoBehaviour
     }
 
     //Обработка завершения перетаскивания
-    private void HandleDragEnd(DragAndDropMessage message)
+    private void HandleDragEnd(DragAndDropMessage message, bool success)
     {
+        if(!success) return;
 
-        if(message.To != null && message.TryGetFrom(out InventorySlotIdentifier inventoryFromSlot) && message.TryGetTo(out InventorySlotIdentifier inventoryToSlot))
+        Debug.Log($"Inventory System Drag & Drop: {message.From.ToString()} -> {message.To?.ToString()}");
+
+        if (message.To != null && message.TryGetFrom(out InventorySlotIdentifier inventoryFromSlot) && message.TryGetTo(out InventorySlotIdentifier inventoryToSlot))
         {
             if (inventoryToSlot.Slot.x >= 0 && inventoryToSlot.Slot.y >= 0) // Валидная позиция
             {
@@ -57,8 +60,8 @@ public class InventorySystem : MonoBehaviour
         {
             if (inventoryToSlot.Slot.x >= 0 && inventoryToSlot.Slot.y >= 0) // Валидная позиция
             {
-                ItemStack itemStack = new ItemStack(message.Item.ItemData, 1); // Так как проверка на перенос из панели крафта, то добавляем только 1 единицу предмета независимо от того, что храниться в message
-                TryAddItem(itemStack, inventoryToSlot.Slot);
+                message.TryGetFrom(out CraftingSlotIdentifier craftFromSlot);
+                TryAddItem(craftFromSlot.Slot != 10 ? new ItemStack(message.Item.ItemData, 1) : message.Item, inventoryToSlot.Slot); // Так как проверка на перенос из панели крафта, то добавляем только 1 единицу предмета независимо от того, что храниться в message
             }
         }
         else if (message.To == null)
@@ -68,8 +71,6 @@ public class InventorySystem : MonoBehaviour
             RemoveItem(inventoryFromSlot.Slot);
             Debug.Log($"Item dropped out of inventory from {inventoryFromSlot.Slot}");
         }
-
-        //Debug.Log($"Drag & Drop: {message.From.ToString()} -> {message.To.ToString()}");
     }
 
     private void OnDestroy()
@@ -125,6 +126,8 @@ public class InventorySystem : MonoBehaviour
 
         var slot = slots[position.x, position.y];
 
+        Debug.Log($"Inventory System Add Item {itemStack} -> {position}. Slot Is Empty: {slot.IsEmpty}");
+
         // Если слот пустой - просто добавляем
         if (slot.IsEmpty)
         {
@@ -136,12 +139,13 @@ public class InventorySystem : MonoBehaviour
         // Если слот занят - пытаемся добавить в стак
         if (slot.CanAcceptItem(itemStack))
         {
+            Debug.Log($"Inventory System Add Item {itemStack} -> {position}. Can Accept Item {true}");
             if (slot.TryAddToStack(itemStack, out int addedQuantity))
             {
                 if (itemStack.Quantity <= 0)
                 {
                     // Предмет полностью добавлен в стак
-                    OnItemAdded?.Invoke(position, itemStack);
+                    OnItemAdded?.Invoke(position, slot.ItemStack);
                 }
                 return true;
             }

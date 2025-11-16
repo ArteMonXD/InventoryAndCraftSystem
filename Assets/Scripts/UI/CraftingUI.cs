@@ -50,6 +50,7 @@ public class CraftingUI : MonoBehaviour
         if (isInitialized) return;
 
         FillCraftingGrid();
+        resultCraftSlot.Initialize();
         UpdateAvailableRecipes();
         Debug.Log("Crafting UI updated");
     }
@@ -105,28 +106,31 @@ public class CraftingUI : MonoBehaviour
                 craftingSlots[to].DisplayItem(craftingSystem.GetItem(to));
             }
 
+            UpdateAvailableRecipes();
+
             Debug.Log($"UI: Items moved from {from} to {to}");
         }
     }
 
-    private void OnItemRemoved(int pos, ItemStack stack)
+    private void OnItemRemoved(int pos)
     {
         if (!isInitialized) return;
         Debug.Log($"UI: Start item removed from {pos}");
         if (IsPositionValid(pos))
         {
-            if (stack == null)
+            Debug.Log($"UI: Check Valid pos item removed from {pos} -> {IsPositionValid(pos)}");
+            if (pos == 10)
             {
-                if(pos == 10)
-                {
-                    resultCraftSlot.Clear();
-                }
-                else
-                {
-                    craftingSlots[pos].Clear();
-                }
-                Debug.Log($"UI: Item removed from {pos}");
+                resultCraftSlot.Clear();
             }
+            else
+            {
+                craftingSlots[pos].Clear();
+            }
+
+            UpdateAvailableRecipes();
+
+            Debug.Log($"UI: Item removed from {pos}");
         }
     }
 
@@ -144,6 +148,9 @@ public class CraftingUI : MonoBehaviour
             {
                 craftingSlots[pos].DisplayItem(stack);
             }
+
+            UpdateAvailableRecipes();
+
             Debug.Log($"UI: Item added at {pos} - {stack.ItemData.itemName}");
         }
     }

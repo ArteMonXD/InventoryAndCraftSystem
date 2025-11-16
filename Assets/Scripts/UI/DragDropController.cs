@@ -1,4 +1,5 @@
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -15,11 +16,12 @@ public class DragDropController : MonoBehaviour
     private Canvas canvas;
 
     public static event System.Action<DragAndDropMessage> OnDragBegin;
-    public static event System.Action<DragAndDropMessage> OnDragEnd;
+    public static event System.Action<DragAndDropMessage, bool> OnDragEnd;
 
     public void Initialize<T>(ItemStack item, PlaceType type, T slotData, ItemStack itemStack)
     {
         draggedItem = item;
+        Debug.Log($"Drag & Drop Message: Initialize {itemStack.ItemId}");
         if(type == PlaceType.Inventory)
         {
             if (slotData is Vector2Int data)
@@ -90,19 +92,28 @@ public class DragDropController : MonoBehaviour
         isDragging = false;
 
         // Определяем целевой слот
-        SlotIdentifier targetSlot = FindTargetSlotUnderMouse();
-        dragDropSlotData.AddToData(targetSlot);
+        if(FindTargetSlotUnderMouse(out SlotIdentifier targetSlot))
+        {
+            dragDropSlotData.AddToData(targetSlot);
 
-        // Уведомляем систему
-        OnDragEnd?.Invoke(dragDropSlotData);
+            // Уведомляем систему
+            OnDragEnd?.Invoke(dragDropSlotData, true);
+        }
+        else
+        {
+            dragDropSlotData.AddToData(targetSlot);
 
-        Debug.Log($"Custom drag ended from {dragDropSlotData.From}/{dragDropSlotData.To}");
+            // Уведомляем систему
+            OnDragEnd?.Invoke(dragDropSlotData, false);
+        }
+
+        Debug.Log($"Custom drag ended from {dragDropSlotData.From.ToString()}/{dragDropSlotData.To?.ToString()}");
 
         // Уничтожаем
         Destroy(gameObject);
     }
 
-    private SlotIdentifier FindTargetSlotUnderMouse()
+    private bool FindTargetSlotUnderMouse(out SlotIdentifier slotIdentifier)
     {
         // Создаем PointerEventData для raycast'а
         var eventData = new PointerEventData(EventSystem.current);
@@ -113,20 +124,42 @@ public class DragDropController : MonoBehaviour
 
         foreach (var result in results)
         {
-            Debug.Log("Find slot: " + result.gameObject.transform.name);
+            Debug.Log("Find slot: " + result.gameObject.name);
             var slotUI = result.gameObject.GetComponent<SlotUI>();
-            if (slotUI != null && dragDropSlotData.TryGetFrom(out InventorySlotIdentifier inventorySlotIdentifier) && slotUI.GridPosition != inventorySlotIdentifier.Slot)
+            Debug.Log("Find slotUI?: " + slotUI != null);
+            if (slotUI != null)
             {
-                return new InventorySlotIdentifier(slotUI.GridPosition);
+                if(!dragDropSlotData.TryGetFrom(out InventorySlotIdentifier inventorySlotIdentifier) || slotUI.GridPosition != inventorySlotIdentifier.Slot)
+                {
+                    slotIdentifier = new InventorySlotIdentifier(slotUI.GridPosition);
+                    return true;
+                }
+                else
+                {
+                    slotIdentifier = null;
+                    return false;
+                }
             }
 
             var craftingSlot = result.gameObject.GetComponent<CraftingSlot>();
-            if(craftingSlot != null && dragDropSlotData.TryGetFrom(out CraftingSlotIdentifier craftingSlotIdentifier) && craftingSlot.GridIndex != craftingSlotIdentifier.Slot && craftingSlot.GridIndex != 10)
+            Debug.Log("Find craftingSlot?: " + craftingSlot != null);
+            if (craftingSlot != null)
             {
-                return new CraftingSlotIdentifier(craftingSlot.GridIndex);
+                if((!dragDropSlotData.TryGetFrom(out CraftingSlotIdentifier craftingSlotIdentifier) || craftingSlot.GridIndex != craftingSlotIdentifier.Slot) && craftingSlot.GridIndex != 10)
+                {
+                    slotIdentifier = new CraftingSlotIdentifier(craftingSlot.GridIndex);
+                    return true;
+                }
+                else
+                {
+                    slotIdentifier = null;
+                    return false;
+                }
             }
+            Debug.Log("Find?: " + result.gameObject.GetComponentInChildren<CraftingSlot>() != null);
         }
 
-        return null;
+        slotIdentifier = null;
+        return true;
     }
 }

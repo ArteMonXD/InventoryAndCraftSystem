@@ -33,4 +33,15 @@ public class Ingredient
         ItemId = itemId;
         Quantity = quantity;
     }
+
+    public bool Equals(Ingredient other)
+    {
+        if (other is null)
+            return false;
+
+        return this.ItemId == other.ItemId && this.Quantity == other.Quantity;
+    }
+
+    public override bool Equals(object obj) => Equals(obj as Ingredient);
+    public override int GetHashCode() => (ItemId, Quantity).GetHashCode();
 }
