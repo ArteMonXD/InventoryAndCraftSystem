@@ -1,0 +1,88 @@
+# =============================================
+# Базовые настройки для Unity 6000.0.32f
+# =============================================
+
+# Автоматически определять текстовые файлы
+* text=auto
+
+# =============================================
+# Текстовые файлы Unity (благодаря Force Text)
+# =============================================
+*.cs text diff=csharp eol=lf
+*.shader text eol=lf
+*.cginc text eol=lf
+*.glslinc text eol=lf
+*.unity text eol=lf
+*.prefab text eol=lf
+*.asset text eol=lf
+*.mat text eol=lf
+*.controller text eol=lf
+*.anim text eol=lf
+*.mask text eol=lf
+*.physicsMaterial2D text eol=lf
+*.physicsMaterial text eol=lf
+*.spriteatlas text eol=lf
+*.renderTexture text eol=lf
+*.terrainlayer text eol=lf
+*.mixer text eol=lf
+*.guiskin text eol=lf
+*.fontsettings text eol=lf
+*.brush text eol=lf
+
+# =============================================
+# Файлы TMPro (TextMesh Pro)
+# =============================================
+*.tps text eol=lf
+*.asset text eol=lf
+
+# =============================================
+# Конфигурационные и скриптовые файлы
+# =============================================
+*.json text eol=lf
+*.xml text eol=lf
+*.txt text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.config text eol=lf
+*.ini text eol=lf
+
+# =============================================
+# Бинарные файлы
+# =============================================
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.tga binary
+*.psd binary
+*.ico binary
+*.bmp binary
+
+# Аудио файлы
+*.wav binary
+*.mp3 binary
+*.ogg binary
+*.aiff binary
+
+# Шрифты
+*.ttf binary
+*.otf binary
+
+# =============================================
+# Файлы Unity метаданных
+# =============================================
+*.meta text eol=lf
+
+# =============================================
+# Исключить merge для бинарных файлов
+# =============================================
+*.png binary -merge
+*.jpg binary -merge
+*.wav binary -merge
+*.mp3 binary -merge
+
+# =============================================
+# Игнорировать изменения прав доступа (для Windows)
+# =============================================
+* -text
